@@ -2,6 +2,7 @@
 Arachne Config Downloader
 """
 
+import importlib.resources
 import sys
 import os
 import time
@@ -18,6 +19,7 @@ from PyQt6.QtCore import QUrl, QFile, QDir, QTimer
 
 from .settings_dialog import SettingsDialog
 from .settings import Settings, DownloadType, TimeUnit
+import pyarachnecdl.data
 
 USER_CONFIG_API_PATH = "/api/openvpn/user_config"
 
@@ -28,6 +30,11 @@ class ArachneConfigDownloader(QApplication):
         self.setOrganizationDomain("nieslony.at")
         self.setApplicationName("Arachne Config Downloader")
         self.setDesktopFileName("arachne-cdl")
+
+        self.icon_blue = QIcon(str(importlib.resources.files(pyarachnecdl.data) / "arachne-blue.svg"))
+        self.icon_green = QIcon(str(importlib.resources.files(pyarachnecdl.data) / "arachne-green.svg"))
+        self.icon_red = QIcon(str(importlib.resources.files(pyarachnecdl.data) / "arachne-red.svg"))
+        self.icon_yellow = QIcon(str(importlib.resources.files(pyarachnecdl.data) / "arachne-yellow.svg"))
 
         self.setQuitOnLastWindowClosed(False)
         self._create_system_tray()
@@ -54,7 +61,7 @@ class ArachneConfigDownloader(QApplication):
         self.menu.addSeparator()
         self.menu.addAction("Exit", self._on_exit)
 
-        self.tray_icon = QSystemTrayIcon(QIcon(""), None)
+        self.tray_icon = QSystemTrayIcon(self.icon_blue, None)
         self.tray_icon.setToolTip("Arachne Config Downloader")
         self.tray_icon.setContextMenu(self.menu)
         self.tray_icon.setVisible(True)

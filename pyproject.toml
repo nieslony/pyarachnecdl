@@ -20,3 +20,6 @@ gui = ["PyQt6"]
 disable=[
   'no-name-in-module'
 ]
+
+[tool.setuptools.package-data]
+pyarachnecdl = ["data/*svg"]
