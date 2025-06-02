@@ -1,0 +1,12 @@
+#!/usr/bin/python3
+
+import sys
+
+from pyarachnecdl.arachne_config_downloader import ArachneConfigDownloader
+
+def main():
+    app = ArachneConfigDownloader()
+    sys.exit(app.exec())
+
+if __name__ == '__main__':
+    main()

@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
     QCheckBox
     )
 from PyQt6.QtCore import Qt
-from settings import Settings, DownloadType, TimeUnit
+from .settings import Settings, DownloadType, TimeUnit
 
 class SettingsDialog(QDialog):
     def __init__(self):

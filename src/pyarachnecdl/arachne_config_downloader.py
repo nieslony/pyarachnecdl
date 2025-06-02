@@ -16,8 +16,8 @@ from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QDialog
 from PyQt6.QtGui import QIcon, QDesktopServices
 from PyQt6.QtCore import QUrl, QFile, QDir, QTimer
 
-from settings_dialog import SettingsDialog
-from settings import Settings, DownloadType, TimeUnit
+from .settings_dialog import SettingsDialog
+from .settings import Settings, DownloadType, TimeUnit
 
 USER_CONFIG_API_PATH = "/api/openvpn/user_config"
 
