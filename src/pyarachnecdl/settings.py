@@ -120,11 +120,9 @@ class Settings(QSettings):
         v = self.value("downloadIntervalUnit", TimeUnit.MIN.name)
         try:
             v = int(v)
-            print("Found interval number: " + str(v) + " = " + list(TimeUnit)[v])
         except ValueError:
             pass
         if isinstance(v, str):
-            print("Found interval str: " + v)
             return TimeUnit[v]
         if isinstance(v, int):
             return list(TimeUnit)[v]
@@ -133,9 +131,7 @@ class Settings(QSettings):
 
     @download_interval_unit.setter
     def download_interval_unit(self, unit: TimeUnit):
-        print("Setter: " + str(unit))
-        self.value("downloadIntervalUnit", unit.name)
-        print("Set: " + str(self.download_interval_unit))
+        self.setValue("downloadIntervalUnit", unit.name)
 
     @property
     def download_type(self) -> DownloadType:

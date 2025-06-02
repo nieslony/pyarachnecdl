@@ -34,7 +34,6 @@ class ArachneConfigDownloader(QApplication):
 
         self.settings = Settings()
         self.settings.sync()
-        print(str(self.settings))
 
         self.icon_blue = QIcon(
             str(importlib.resources.files(pyarachnecdl.data) / "arachne-blue.svg")
@@ -214,16 +213,16 @@ class ArachneConfigDownloader(QApplication):
         dlg.load_settings(self.settings)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             dlg.save_settings(self.settings)
-            print(self.settings)
             self.settings.sync()
 
     def _on_open_arachne_configuration(self):
         QDesktopServices.openUrl(QUrl(self.settings.admin_server_url))
 
     def _on_exit(self):
-        self._info("Killing timer")
-        self.download_thread.cancel()
-        self._info("Timer killed")
+        try:
+            self.download_thread.cancel()
+        except Exception:
+            pass
         self.quit()
 
 def main():
