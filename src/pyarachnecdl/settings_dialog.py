@@ -11,10 +11,12 @@ from PyQt6.QtWidgets import (
     QCheckBox
     )
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon
+
 from .settings import Settings, DownloadType, TimeUnit
 
 class SettingsDialog(QDialog):
-    def __init__(self):
+    def __init__(self, icon: QIcon):
         super().__init__()
         self.setWindowTitle("Download Settings")
 
@@ -113,9 +115,7 @@ class SettingsDialog(QDialog):
             self.download_interval_unit.setEnabled(False)
 
     def _on_change_download_type(self, index: int):
-        self.download_destination.setEnabled(
-            [v for v in DownloadType][index] == DownloadType.OVPN
-            )
+        self.download_destination.setEnabled(list(DownloadType)[index] == DownloadType.OVPN)
 
     def load_settings(self, settings: Settings):
         self.admin_server_url.setText(settings.admin_server_url)
@@ -144,10 +144,3 @@ class SettingsDialog(QDialog):
         settings.download_delay_unit = self.download_delay_unit.currentData()
         settings.download_type = self.download_type.currentData()
         settings.download_destination = self.download_destination.text()
-        print(f"Saving {str(self)}")
-        print(self.download_interval_unit.currentData() + " " + self.download_interval_unit.currentData().name)
-        print(self.download_delay_unit.currentData() + " " + self.download_delay_unit.currentData().name)
-
-
-
-

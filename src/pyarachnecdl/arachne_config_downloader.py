@@ -6,20 +6,20 @@ import importlib.resources
 import sys
 import os
 import time
-import dbus
 import json
 import ipaddress
 import threading
 import requests
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 
+import dbus
 from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QDialog
 from PyQt6.QtGui import QIcon, QDesktopServices
 from PyQt6.QtCore import QUrl, QFile, QDir, QTimer
 
+import pyarachnecdl.data
 from .settings_dialog import SettingsDialog
 from .settings import Settings, DownloadType, TimeUnit
-import pyarachnecdl.data
 
 USER_CONFIG_API_PATH = "/api/openvpn/user_config"
 
@@ -30,18 +30,28 @@ class ArachneConfigDownloader(QApplication):
         self.setOrganizationDomain("nieslony.at")
         self.setApplicationName("Arachne Config Downloader")
         self.setDesktopFileName("arachne-cdl")
-
-        self.icon_blue = QIcon(str(importlib.resources.files(pyarachnecdl.data) / "arachne-blue.svg"))
-        self.icon_green = QIcon(str(importlib.resources.files(pyarachnecdl.data) / "arachne-green.svg"))
-        self.icon_red = QIcon(str(importlib.resources.files(pyarachnecdl.data) / "arachne-red.svg"))
-        self.icon_yellow = QIcon(str(importlib.resources.files(pyarachnecdl.data) / "arachne-yellow.svg"))
-
         self.setQuitOnLastWindowClosed(False)
-        self._create_system_tray()
 
         self.settings = Settings()
         self.settings.sync()
         print(str(self.settings))
+
+        self.icon_blue = QIcon(
+            str(importlib.resources.files(pyarachnecdl.data) / "arachne-blue.svg")
+            )
+        self.icon_green = QIcon(
+            str(importlib.resources.files(pyarachnecdl.data) / "arachne-green.svg")
+            )
+        self.icon_red = QIcon(
+            str(importlib.resources.files(pyarachnecdl.data) / "arachne-red.svg")
+            )
+        self.icon_yellow = QIcon(
+            str(importlib.resources.files(pyarachnecdl.data) / "arachne-yellow.svg")
+            )
+        self.setWindowIcon(self.icon_green)
+
+        self._create_system_tray()
+
 
         if self.settings.auto_download:
             if self.settings.download_delay_unit == TimeUnit.SEC:
@@ -50,8 +60,23 @@ class ArachneConfigDownloader(QApplication):
                 delay = self.settings.download_delay * 60
             elif self.settings.download_delay_unit == TimeUnit.HOUR:
                 delay = self.settings.download_delay * 60 * 60
+            else:
+                return
             self.download_thread = threading.Timer(delay, self._scheduled_download)
             self.download_thread.start()
+
+    def _status_icon(self):
+        last_successful_download = self.settings.last_successful_download
+        if last_successful_download == -1:
+            return self.icon_blue
+
+        now = time.time()
+        if now - last_successful_download < 7 * 24 * 60 * 60:
+            return self.icon_green
+        if now - last_successful_download < 31 * 24 * 60 * 60:
+            return self.icon_yellow
+
+        return self.icon_red
 
     def _create_system_tray(self):
         self.menu = QMenu(None)
@@ -61,7 +86,7 @@ class ArachneConfigDownloader(QApplication):
         self.menu.addSeparator()
         self.menu.addAction("Exit", self._on_exit)
 
-        self.tray_icon = QSystemTrayIcon(self.icon_blue, None)
+        self.tray_icon = QSystemTrayIcon(self._status_icon(), None)
         self.tray_icon.setToolTip("Arachne Config Downloader")
         self.tray_icon.setContextMenu(self.menu)
         self.tray_icon.setVisible(True)
@@ -82,14 +107,16 @@ class ArachneConfigDownloader(QApplication):
                 delay = self.settings.download_interval * 60
             elif self.settings.download_interval_unit == TimeUnit.HOUR:
                 delay = self.settings.download_interval * 60 * 60
+            else:
+                return
             self.download_thread = threading.Timer(delay, self._scheduled_download)
             self.download_thread.start()
 
     def _save_file(self, content):
-        dir = self.settings.download_destination.replace("~/", QDir.homePath() + "/")
-        if not os.path.exists(dir):
-            os.mkdir(dir)
-        fn = dir + "/OpenVPN_arachne.conf"
+        config_dir = self.settings.download_destination.replace("~/", QDir.homePath() + "/")
+        if not os.path.exists(config_dir):
+            os.mkdir(config_dir)
+        fn = config_dir + "/OpenVPN_arachne.conf"
         f = QFile(fn)
         f.open(QFile.OpenModeFlag.WriteOnly)
         f.write(content)
@@ -119,7 +146,7 @@ class ArachneConfigDownloader(QApplication):
                     "ca": "ca.crt",
                     "cert": "cert.crt",
                     "key": "key.key"
-                    } | dict([ (k,str(v)) for k,v in con_data["data"].items() ])
+                    } | { k: str(v) for k,v in con_data["data"].items() }
                 },
             "ipv4": {
                 "never-default": con_data["ipv4"]["never-default"],
@@ -142,23 +169,30 @@ class ArachneConfigDownloader(QApplication):
                 dbus_interface="org.freedesktop.NetworkManager.Settings.Connection"
                 )
             self._info(f"Updaded connection '{con_data['name']}' with uuid '{self.settings.connection_uuid}' at {cur_obj_path}")
-        except dbus.exceptions.DBusException as ex:
+        except dbus.exceptions.DBusException:
             new_con_obj_path = settings.AddConnection(
                 con_settings,
                 dbus_interface="org.freedesktop.NetworkManager.Settings"
             )
             new_con = bus.get_object("org.freedesktop.NetworkManager", new_con_obj_path)
-            new_settings = new_con.GetSettings(dbus_interface="org.freedesktop.NetworkManager.Settings.Connection")
+            new_settings = new_con.GetSettings(
+                dbus_interface="org.freedesktop.NetworkManager.Settings.Connection"
+                )
             uuid = new_settings["connection"]["uuid"]
             self.settings.connection_uuid = uuid
             self._info(f"Added new connection '{con_data['name']}' with uuid ''{uuid}'")
 
     def _on_download_now(self):
         url = self.settings.admin_server_url + USER_CONFIG_API_PATH
-        if (self.settings.download_type == DownloadType.NETWORK_MANAGER):
+        if self.settings.download_type == DownloadType.NETWORK_MANAGER:
             url += "?format=json"
         try:
-            r = requests.get(url, auth=HTTPKerberosAuth(mutual_authentication=OPTIONAL))
+            r = requests.get(
+                url,
+                auth=HTTPKerberosAuth(mutual_authentication=OPTIONAL),
+                timeout=6,
+                verify=(not self.settings.ignore_ssl_errors)
+                )
         except requests.exceptions.ConnectionError as ex:
             self._error(f"Cannot connect to {url}: {str(ex)}")
             return
@@ -176,7 +210,7 @@ class ArachneConfigDownloader(QApplication):
             self._save_file(r.content)
 
     def _on_settings(self):
-        dlg = SettingsDialog()
+        dlg = SettingsDialog(self.icon_green)
         dlg.load_settings(self.settings)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             dlg.save_settings(self.settings)

@@ -4,15 +4,24 @@ import socket
 from PyQt6.QtCore import QSettings
 
 class DownloadType(StrEnum):
+    """
+    Downlod Type
+    """
     NETWORK_MANAGER = "Network Manager Configuration"
     OVPN = ".ovpn File"
 
 class TimeUnit(StrEnum):
+    """
+    Time Unit
+    """
     SEC = "Seconds"
     MIN = "Minutes"
     HOUR = "Hours"
 
 class Settings(QSettings):
+    """
+    Settings Dialog
+    """
     @property
     def admin_server_url(self) -> str:
         return self.value(
@@ -81,10 +90,10 @@ class Settings(QSettings):
             pass
         if isinstance(v, str):
             return TimeUnit[v]
-        elif isinstance(v, int):
-            return [_ for _ in TimeUnit][v]
-        else:
-            return None
+        if isinstance(v, int):
+            return list(TimeUnit)[v]
+
+        return None
 
     @download_delay_unit.setter
     def download_delay_unit(self, unit: TimeUnit):
@@ -111,16 +120,16 @@ class Settings(QSettings):
         v = self.value("downloadIntervalUnit", TimeUnit.MIN.name)
         try:
             v = int(v)
-            print("Found interval number: " + str(v) + " = " + [_ for _ in TimeUnit][v])
+            print("Found interval number: " + str(v) + " = " + list(TimeUnit)[v])
         except ValueError:
             pass
         if isinstance(v, str):
             print("Found interval str: " + v)
             return TimeUnit[v]
-        elif isinstance(v, int):
-            return [_ for _ in TimeUnit][v]
-        else:
-            return None
+        if isinstance(v, int):
+            return list(TimeUnit)[v]
+
+        return None
 
     @download_interval_unit.setter
     def download_interval_unit(self, unit: TimeUnit):
@@ -137,11 +146,10 @@ class Settings(QSettings):
             pass
         if isinstance(v, str):
             return DownloadType[v]
-        elif isinstance(v, int):
-            return [_ for _ in DownloadType][v]
-        else:
-            return None
+        if isinstance(v, int):
+            return list(DownloadType)[v]
 
+        return None
 
     @download_type.setter
     def download_type(self, dl_type: DownloadType):
@@ -157,7 +165,7 @@ class Settings(QSettings):
 
     @property
     def last_successful_download(self) -> int:
-        return int(self.value("lastSuccesfulDownload", 0))
+        return int(self.value("lastSuccesfulDownload", -1))
 
     @last_successful_download.setter
     def last_successful_download(self, last_dl: int):

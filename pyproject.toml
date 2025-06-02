@@ -6,6 +6,8 @@ authors = [
 ]
 readme = "README.md"
 license-files = ["LICENSE"]
+dependencies = [
+]
 
 [project.urls]
 Repository = "https://github.com/nieslony/pyarachnecdl.git"
@@ -13,12 +15,10 @@ Repository = "https://github.com/nieslony/pyarachnecdl.git"
 [project.gui-scripts]
 arachnecdl-gui = "pyarachnecdl.arachne_config_downloader:main"
 
-[project.optional-dependencies]
-gui = ["PyQt6"]
-
 [tool.pylint.'MESSAGES CONTROL']
 disable=[
-  'no-name-in-module'
+  "no-name-in-module",
+  "missing-function-docstring"
 ]
 
 [tool.setuptools.package-data]
