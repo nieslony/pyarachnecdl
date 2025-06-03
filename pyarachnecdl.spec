@@ -1,3 +1,6 @@
+%define desktop_dir     %{_datadir}/applications
+%define autostart_dir   %{_sysconfdir}/xdg/autostart
+
 Name:       pyarachnecdl
 Version:    0.1
 Release:    1%{?dist}
@@ -10,6 +13,7 @@ BuildArch:      noarch
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 BuildRequires:  systemd-rpm-macros
+BuildRequires:  desktop-file-utils
 
 %{?python_enable_dependency_generator}
 
@@ -25,12 +29,31 @@ OpenVPN.
 
 %install
 %py3_install
+mkdir -pv %{buildroot}/%{desktop_dir}
+touch %{buildroot}/%{desktop_dir}/%{name}.desktop
+desktop-file-edit --set-name=%{name} \
+    --set-generic-name="Arachne Config Downloader" \
+    --set-icon=%{python3_sitelib}/%{name}/data/arachne-green.svg \
+    --set-key=Type --set-value=Application \
+    --set-key=Exec --set-value=%{name} \
+    %{buildroot}/%{desktop_dir}/%{name}.desktop
+
+mkdir -pv %{buildroot}/%{autostart_dir}
+touch %{buildroot}/%{autostart_dir}/%{name}.desktop
+desktop-file-edit --set-name=%{name} \
+    --set-generic-name="Arachne Config Downloader" \
+    --set-icon=%{python3_sitelib}/%{name}/data/arachne-green.svg \
+    --set-key=Type --set-value=Application \
+    --set-key=Exec --set-value=%{name} \
+    %{buildroot}/%{autostart_dir}/%{name}.desktop
 
 %files
 %doc README.md
 %license LICENSE
 %{_bindir}/pyarachnecdl
 %{python3_sitelib}
+%{desktop_dir}/%{name}.desktop
+%{autostart_dir}/%{name}.desktop
 
 %changelog
 * Mon Jun 02 2025 Claas Nieslony <github@nieslony.at> 0.1
