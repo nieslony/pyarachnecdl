@@ -2,6 +2,7 @@ from enum import StrEnum
 import socket
 
 from PyQt6.QtCore import QSettings
+from PyQt6.QtWidgets import QApplication
 
 class DownloadType(StrEnum):
     """
@@ -22,6 +23,12 @@ class Settings(QSettings):
     """
     Settings Dialog
     """
+    def __init__(self):
+        app = QApplication.instance()
+        org_name = app.organizationName().replace(" ", "")
+        app_name = app.applicationName().replace(" ", "")
+        super().__init__(org_name, app_name)
+
     @property
     def admin_server_url(self) -> str:
         return self.value(
