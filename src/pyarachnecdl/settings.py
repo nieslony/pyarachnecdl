@@ -41,30 +41,6 @@ class Settings(QSettings):
         self.setValue("adminServerurl", url)
 
     @property
-    def allow_download_all_wifi(self) -> bool:
-        return bool(self.value("allowDownloadAllWifi", True))
-
-    @allow_download_all_wifi.setter
-    def allow_download_all_wifi(self, allow: bool):
-        self.setValue("allowDownloadAllWifi", allow)
-
-    @property
-    def allow_download_all_wired(self) -> bool:
-        return bool(self.value("allowDownloadAllWired", True))
-
-    @allow_download_all_wired.setter
-    def allow_download_all_wired(self, allow: bool):
-        self.setValue(allow)
-
-    @property
-    def allow_download_from_vpn(self) -> bool:
-        return bool(self.value("allowDownloadFromVpn", True))
-
-    @allow_download_from_vpn.setter
-    def allow_download_from_vpn(self, allow: bool):
-        self.setValue("allow_download_from_vpn", allow)
-
-    @property
     def auto_download(self) -> bool:
         return bool(self.value("autoDownload", True))
 
@@ -172,7 +148,39 @@ class Settings(QSettings):
 
     @last_successful_download.setter
     def last_successful_download(self, last_dl: int):
-        self.value("lastSuccesfulDownload", last_dl)
+        self.setValue("lastSuccesfulDownload", last_dl)
+
+    @property
+    def allow_download_from_wifi(self) -> bool:
+        return bool(self.value("allowDownloadFromWifi", True))
+
+    @allow_download_from_wifi.setter
+    def allow_download_from_wifi(self, allow: bool):
+        self.setValue("allowDownloadFromWifi", allow)
+
+    @property
+    def allow_download_from_wired(self) -> bool:
+        return bool(self.value("allowDownloadFromWired", True))
+
+    @allow_download_from_wired.setter
+    def allow_download_from_wired(self, allow: bool):
+        self.setValue("allowDownloadFromWired", allow)
+
+    @property
+    def allow_download_from_vpn(self) -> bool:
+        return bool(self.value("allowDownloadFromVpn", True))
+
+    @allow_download_from_vpn.setter
+    def allow_download_from_vpn(self, allow: bool):
+        self.setValue("allowDownloadFromVpn", allow)
+
+    @property
+    def allowed_connections(self) -> list:
+        return eval(self.value("allowedConnections", "[]"))
+
+    @allowed_connections.setter
+    def allowed_connections(self, cons: list):
+        self.setValue("allowedConnections", str(cons))
 
     def __str__(self) -> str:
         l = []

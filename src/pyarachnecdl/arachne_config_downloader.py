@@ -20,6 +20,8 @@ from PyQt6.QtCore import QUrl, QFile, QDir, QTimer
 import pyarachnecdl.data
 from .settings_dialog import SettingsDialog
 from .settings import Settings, DownloadType, TimeUnit
+from . import network_manager_connection
+from .network_manager_connection import ConnectionType
 
 USER_CONFIG_API_PATH = "/api/openvpn/user_config"
 
@@ -47,7 +49,7 @@ class ArachneConfigDownloader(QApplication):
         self.icon_yellow = QIcon(
             str(importlib.resources.files(pyarachnecdl.data) / "arachne-yellow.svg")
             )
-        self.setWindowIcon(self.icon_green)
+        self.icon_pixmap = self.icon_green.pixmap(16, 16)
 
         self._create_system_tray()
 
@@ -77,6 +79,30 @@ class ArachneConfigDownloader(QApplication):
 
         return self.icon_red
 
+    def _is_nm_connection_allowed(self) -> bool:
+        allowed_cons = self.settings.allowed_connections
+        for con in network_manager_connection.get_all_active():
+            print(str(con))
+            if con.uuid in allowed_cons:
+                print("allowed by uuid")
+                return True
+            if con.con_type == ConnectionType.WIFI and self.settings.allow_download_from_wifi:
+                print("is wifi")
+                print(self.settings.allow_download_from_wifi)
+                return True
+            if con.con_type == ConnectionType.WIRED and self.settings.allow_download_from_wired:
+                print("is wired")
+                return True
+            if con.con_type == ConnectionType.VPN and \
+               con.uuid == self.settings.connection_uuid and \
+               settings.allow_download_from_vpn:
+                print("is VPN")
+                return True
+
+        print("Not allowed")
+        return False
+
+
     def _create_system_tray(self):
         self.menu = QMenu(None)
         self.menu.addAction("Download now", self._on_download_now)
@@ -98,7 +124,10 @@ class ArachneConfigDownloader(QApplication):
         print(f"{time.asctime()}: {msg}")
 
     def _scheduled_download(self):
-        self._on_download_now()
+        if self._is_nm_connection_allowed():
+            self._on_download_now()
+        else:
+            self._info("There's no network connection allowed for doenload")
         if self.settings.auto_download:
             if self.settings.download_interval_unit == TimeUnit.SEC:
                 delay = self.settings.download_interval
@@ -209,7 +238,7 @@ class ArachneConfigDownloader(QApplication):
             self._save_file(r.content)
 
     def _on_settings(self):
-        dlg = SettingsDialog(self.icon_green)
+        dlg = SettingsDialog(QIcon(self.icon_pixmap))
         dlg.load_settings(self.settings)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             dlg.save_settings(self.settings)
