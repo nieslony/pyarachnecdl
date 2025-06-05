@@ -1,19 +1,21 @@
 %define desktop_dir     %{_datadir}/applications
 %define autostart_dir   %{_sysconfdir}/xdg/autostart
 
-Name:       pyarachnecdl
-Version:    0.1
-Release:    1%{?dist}
-Summary:    Arachne Configuration Downloader
-License:    GPLv3
-URL:        https://github.com/nieslony/pyarachnecdl
-Source0:    %{name}-%{version}.tar.gz
+Name:           pyarachnecdl
+Version:        0.1
+Release:        1%{?dist}
+Summary:        Arachne Configuration Downloader
+License:        GPLv3
+URL:            https://github.com/nieslony/pyarachnecdl
+Source0:        %{name}-%{version}.tar.gz
 
 BuildArch:      noarch
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  desktop-file-utils
+
+Recommends:     NetworkManager-openvpn
 
 %{?python_enable_dependency_generator}
 
