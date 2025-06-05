@@ -82,24 +82,17 @@ class ArachneConfigDownloader(QApplication):
     def _is_nm_connection_allowed(self) -> bool:
         allowed_cons = self.settings.allowed_connections
         for con in network_manager_connection.get_all_active():
-            print(str(con))
             if con.uuid in allowed_cons:
-                print("allowed by uuid")
                 return True
             if con.con_type == ConnectionType.WIFI and self.settings.allow_download_from_wifi:
-                print("is wifi")
-                print(self.settings.allow_download_from_wifi)
                 return True
             if con.con_type == ConnectionType.WIRED and self.settings.allow_download_from_wired:
-                print("is wired")
                 return True
             if con.con_type == ConnectionType.VPN and \
                con.uuid == self.settings.connection_uuid and \
                settings.allow_download_from_vpn:
-                print("is VPN")
                 return True
 
-        print("Not allowed")
         return False
 
 
@@ -126,8 +119,6 @@ class ArachneConfigDownloader(QApplication):
     def _scheduled_download(self):
         if self._is_nm_connection_allowed():
             self._on_download_now()
-        else:
-            self._info("There's no network connection allowed for doenload")
         if self.settings.auto_download:
             if self.settings.download_interval_unit == TimeUnit.SEC:
                 delay = self.settings.download_interval

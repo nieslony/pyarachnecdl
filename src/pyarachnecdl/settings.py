@@ -1,5 +1,6 @@
 from enum import StrEnum
 import socket
+import ast
 
 from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import QApplication
@@ -42,7 +43,7 @@ class Settings(QSettings):
 
     @property
     def auto_download(self) -> bool:
-        return bool(self.value("autoDownload", True))
+        return self.value("autoDownload", True, type=bool)
 
     @auto_download.setter
     def auto_download(self, auto_dl: bool):
@@ -136,7 +137,7 @@ class Settings(QSettings):
 
     @property
     def ignore_ssl_errors(self) -> bool:
-        return bool(self.value("ignoreSslErrors", False))
+        return self.value("ignoreSslErrors", False, type=bool)
 
     @ignore_ssl_errors.setter
     def ignore_ssl_errors(self, ignore: bool):
@@ -152,7 +153,7 @@ class Settings(QSettings):
 
     @property
     def allow_download_from_wifi(self) -> bool:
-        return bool(self.value("allowDownloadFromWifi", True))
+        return self.value("allowDownloadFromWifi", True, type=bool)
 
     @allow_download_from_wifi.setter
     def allow_download_from_wifi(self, allow: bool):
@@ -160,7 +161,7 @@ class Settings(QSettings):
 
     @property
     def allow_download_from_wired(self) -> bool:
-        return bool(self.value("allowDownloadFromWired", True))
+        return self.value("allowDownloadFromWired", True, type=bool)
 
     @allow_download_from_wired.setter
     def allow_download_from_wired(self, allow: bool):
@@ -168,7 +169,7 @@ class Settings(QSettings):
 
     @property
     def allow_download_from_vpn(self) -> bool:
-        return bool(self.value("allowDownloadFromVpn", True))
+        return self.value("allowDownloadFromVpn", True, type=bool)
 
     @allow_download_from_vpn.setter
     def allow_download_from_vpn(self, allow: bool):
@@ -176,7 +177,7 @@ class Settings(QSettings):
 
     @property
     def allowed_connections(self) -> list:
-        return eval(self.value("allowedConnections", "[]"))
+        return ast.literal_eval(self.value("allowedConnections", "[]"))
 
     @allowed_connections.setter
     def allowed_connections(self, cons: list):
