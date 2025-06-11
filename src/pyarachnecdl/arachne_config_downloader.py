@@ -53,7 +53,6 @@ class ArachneConfigDownloader(QApplication):
 
         self._create_system_tray()
 
-
         if self.settings.auto_download:
             if self.settings.download_delay_unit == TimeUnit.SEC:
                 delay = self.settings.download_delay
@@ -102,6 +101,7 @@ class ArachneConfigDownloader(QApplication):
         self.menu.addAction("Settings...", self._on_settings)
         self.menu.addAction("Open Arachne in Webbrowser", self._on_open_arachne_configuration)
         self.menu.addSeparator()
+        self.menu.addAction("About Qt..", self.aboutQt)
         self.menu.addAction("Exit", self._on_exit)
 
         self.tray_icon = QSystemTrayIcon(self._status_icon(), None)
@@ -111,9 +111,11 @@ class ArachneConfigDownloader(QApplication):
         self.tray_icon.show()
 
     def _error(self, msg):
+        self.tray_icon.showMessage("Error", msg, QSystemTrayIcon.MessageIcon.Warning)
         print(f"{time.asctime()}: {msg}")
 
     def _info(self, msg):
+        self.tray_icon.showMessage("Info", msg, QSystemTrayIcon.MessageIcon.Information)
         print(f"{time.asctime()}: {msg}")
 
     def _scheduled_download(self):
@@ -142,11 +144,7 @@ class ArachneConfigDownloader(QApplication):
         f.close()
 
     def _update_networkmaneger_connection(self, content):
-        try:
-            con_data = json.loads(content)
-        except json.decoder.JSONDecodeError as ex:
-            self._error(str(ex))
-            return
+        con_data = json.loads(content)
         bus = dbus.SystemBus()
         settings = bus.get_object(
             "org.freedesktop.NetworkManager",
@@ -187,7 +185,7 @@ class ArachneConfigDownloader(QApplication):
                 con_settings,
                 dbus_interface="org.freedesktop.NetworkManager.Settings.Connection"
                 )
-            self._info(f"Updaded connection '{con_data['name']}' with uuid '{self.settings.connection_uuid}' at {cur_obj_path}")
+            self._info(f"Updaded connection '{con_data['name']}'")
         except dbus.exceptions.DBusException:
             new_con_obj_path = settings.AddConnection(
                 con_settings,
@@ -212,21 +210,20 @@ class ArachneConfigDownloader(QApplication):
                 timeout=6,
                 verify=(not self.settings.ignore_ssl_errors)
                 )
-        except requests.exceptions.ConnectionError as ex:
+            #r.raise_for_status()
+
+            if self.settings.download_type == DownloadType.NETWORK_MANAGER:
+                self._update_networkmaneger_connection(r.content)
+            elif self.settings.download_type == DownloadType.OVPN:
+                self._save_file(r.content)
+            self.settings.touch_last_successful_download()
+            self.tray_icon.setIcon(self._status_icon())
+        except json.decoder.JSONDecodeError as ex:
+            self._error(f"Error parsing json: {str(ex)}")
+        except requests.exceptions.HTTPError as ex:
+            self._error(f"Cannot download configuration from {url}: {ex.strerror()}")
+        except requests.exceptions.ConnectTimeout as ex:
             self._error(f"Cannot connect to {url}: {str(ex)}")
-            return
-
-        if r.status_code == 401:
-            print("Denied")
-            return
-        if r.status_code != 200:
-            print("Error " + str(r.status_code))
-            return
-
-        if self.settings.download_type == DownloadType.NETWORK_MANAGER:
-            self._update_networkmaneger_connection(r.content)
-        elif self.settings.download_type == DownloadType.OVPN:
-            self._save_file(r.content)
 
     def _on_settings(self):
         dlg = SettingsDialog(QIcon(self.icon_pixmap))
