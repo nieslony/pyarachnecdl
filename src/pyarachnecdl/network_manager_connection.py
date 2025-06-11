@@ -1,5 +1,6 @@
-import dbus
 from enum import StrEnum, auto
+
+import dbus
 
 class ConnectionType(StrEnum):
     WIRED = "802-3-ethernet"
@@ -24,10 +25,14 @@ def get_all() -> list:
         )
 
     cons = []
-    conObjPaths = settings.ListConnections(dbus_interface="org.freedesktop.NetworkManager.Settings")
-    for objPath in conObjPaths:
-        con = bus.get_object("org.freedesktop.NetworkManager", objPath)
-        settings = con.GetSettings(dbus_interface="org.freedesktop.NetworkManager.Settings.Connection")
+    con_obj_paths = settings.ListConnections(
+        dbus_interface="org.freedesktop.NetworkManager.Settings"
+        )
+    for obj_path in con_obj_paths:
+        con = bus.get_object("org.freedesktop.NetworkManager", obj_path)
+        settings = con.GetSettings(
+            dbus_interface="org.freedesktop.NetworkManager.Settings.Connection"
+            )
         try:
             con_type = ConnectionType(str(settings["connection"]["type"]))
         except ValueError:
@@ -44,13 +49,13 @@ def get_all_active() -> list:
         "org.freedesktop.NetworkManager",
         "/org/freedesktop/NetworkManager"
         )
-    allConObjPaths = nm.GetAll(
+    all_con_obj_paths = nm.GetAll(
         "org.freedesktop.NetworkManager",
         dbus_interface="org.freedesktop.DBus.Properties"
         )["ActiveConnections"]
     cons = []
-    for conObjPath in allConObjPaths:
-        con = bus.get_object("org.freedesktop.NetworkManager", conObjPath)
+    for con_obj_path in all_con_obj_paths:
+        con = bus.get_object("org.freedesktop.NetworkManager", con_obj_path)
         iface = dbus.Interface(con, 'org.freedesktop.DBus.Properties')
         props = iface.GetAll("org.freedesktop.NetworkManager.Connection.Active")
         con_name = props["Id"]

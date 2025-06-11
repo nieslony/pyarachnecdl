@@ -1,5 +1,3 @@
-import dbus
-
 from PyQt6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -45,91 +43,95 @@ class SettingsDialog(QDialog):
         self.setLayout(layout)
 
     def _create_allowed_networks_tab(self) -> QWidget:
-        self.allowAllWifi = QCheckBox("Allow from all Wifi Connections")
+        self.allow_all_wifi = QCheckBox("Allow from all Wifi Connections")
 
-        self.allowAllWired = QCheckBox("Allow from all Wired Connections")
+        self.allow_all_wired = QCheckBox("Allow from all Wired Connections")
 
-        self.allowConfiguredVpn = QCheckBox("Allow from Configured VPN")
+        self.allow_configured_vpn = QCheckBox("Allow from Configured VPN")
 
-        self.availableConnections = QListWidget()
+        self.available_connections = QListWidget()
 
-        self.addConnection = QPushButton("Add")
-        self.addConnection.setEnabled(False)
-        self.addAllConnections = QPushButton("Add All")
-        self.addAllConnections.setEnabled(False)
-        self.removeConnection = QPushButton("Remove")
-        self.removeConnection.setEnabled(False)
-        self.removeAllConnections = QPushButton("Remove All")
-        self.removeAllConnections.setEnabled(False)
+        self.add_connection = QPushButton("Add")
+        self.add_connection.setEnabled(False)
+        self.add_all_connections = QPushButton("Add All")
+        self.add_all_connections.setEnabled(False)
+        self.remove_connection = QPushButton("Remove")
+        self.remove_connection.setEnabled(False)
+        self.remove_all_connections = QPushButton("Remove All")
+        self.remove_all_connections.setEnabled(False)
         buttons = QVBoxLayout()
-        buttons.addWidget(self.addConnection)
-        buttons.addWidget(self.addAllConnections)
-        buttons.addWidget(self.removeConnection)
-        buttons.addWidget(self.removeAllConnections)
+        buttons.addWidget(self.add_connection)
+        buttons.addWidget(self.add_all_connections)
+        buttons.addWidget(self.remove_connection)
+        buttons.addWidget(self.remove_all_connections)
         buttons.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
-        self.allowedConnections = QListWidget()
+        self.allowed_connections = QListWidget()
 
-        connectionsGrid = QGridLayout()
-        connectionsGrid.addWidget(QLabel("Available Connections"), 0, 0)
-        connectionsGrid.addWidget(self.availableConnections, 1, 0)
-        connectionsGrid.setColumnStretch(0, 1)
+        connections_grid = QGridLayout()
+        connections_grid.addWidget(QLabel("Available Connections"), 0, 0)
+        connections_grid.addWidget(self.available_connections, 1, 0)
+        connections_grid.setColumnStretch(0, 1)
 
-        connectionsGrid.addLayout(buttons, 1, 1)
-        connectionsGrid.setColumnStretch(1, 0)
+        connections_grid.addLayout(buttons, 1, 1)
+        connections_grid.setColumnStretch(1, 0)
 
-        connectionsGrid.addWidget(QLabel("Allowed Connections"), 0, 2)
-        connectionsGrid.addWidget(self.allowedConnections, 1, 2)
-        connectionsGrid.setColumnStretch(2, 1)
+        connections_grid.addWidget(QLabel("Allowed Connections"), 0, 2)
+        connections_grid.addWidget(self.allowed_connections, 1, 2)
+        connections_grid.setColumnStretch(2, 1)
 
         vbox = QVBoxLayout()
-        vbox.addWidget(self.allowAllWifi)
-        vbox.addWidget(self.allowAllWired)
-        vbox.addWidget(self.allowConfiguredVpn)
-        vbox.addLayout(connectionsGrid, 1)
+        vbox.addWidget(self.allow_all_wifi)
+        vbox.addWidget(self.allow_all_wired)
+        vbox.addWidget(self.allow_configured_vpn)
+        vbox.addLayout(connections_grid, 1)
         widget = QWidget()
         widget.setLayout(vbox)
 
-        self.availableConnections.itemSelectionChanged.connect(self._on_availableConnections_selection_changed)
-        self.allowedConnections.itemSelectionChanged.connect(self._on_allowedConnections_selection_changed)
-        self.addConnection.clicked.connect(self._on_addConnection_clicked)
-        self.addAllConnections.clicked.connect(self._on_addAllConnections_clicked)
-        self.removeConnection.clicked.connect(self._on_removeConnection_clicked)
-        self.removeAllConnections.clicked.connect(self._on_removeAllConnections_clicked)
+        self.available_connections.itemSelectionChanged.connect(
+            self._on_available_connections_selection_changed
+            )
+        self.allowed_connections.itemSelectionChanged.connect(
+            self._on_allowed_connections_selection_changed
+            )
+        self.add_connection.clicked.connect(self._on_add_connection_clicked)
+        self.add_all_connections.clicked.connect(self._on_add_all_connections_clicked)
+        self.remove_connection.clicked.connect(self._on_remove_connection_clicked)
+        self.remove_all_connections.clicked.connect(self._on_remove_all_connections_clicked)
 
         return widget
 
-    def _on_availableConnections_selection_changed(self):
-        enable = len(self.availableConnections.selectedItems()) > 0
-        self.addConnection.setEnabled(enable);
-        self.addAllConnections.setEnabled(enable)
+    def _on_available_connections_selection_changed(self):
+        enable = len(self.available_connections.selectedItems()) > 0
+        self.add_connection.setEnabled(enable)
+        self.add_all_connections.setEnabled(enable)
 
-    def _on_allowedConnections_selection_changed(self):
-        enable = len(self.allowedConnections.selectedItems()) > 0
-        self.removeConnection.setEnabled(enable);
-        self.removeAllConnections.setEnabled(enable)
+    def _on_allowed_connections_selection_changed(self):
+        enable = len(self.allowed_connections.selectedItems()) > 0
+        self.remove_connection.setEnabled(enable)
+        self.remove_all_connections.setEnabled(enable)
 
-    def _on_addConnection_clicked(self):
-        items = self.availableConnections.selectedItems()
+    def _on_add_connection_clicked(self):
+        items = self.available_connections.selectedItems()
         for i in items:
-            self.availableConnections.takeItem(self.availableConnections.indexFromItem(i).row())
-            self.allowedConnections.addItem(i)
+            self.available_connections.takeItem(self.available_connections.indexFromItem(i).row())
+            self.allowed_connections.addItem(i)
 
-    def _on_addAllConnections_clicked(self):
-        for i in range(self.availableConnections.count()-1, -1, -1):
-            item = self.availableConnections.takeItem(i)
-            self.allowedConnections.insertItem(0, item)
+    def _on_add_all_connections_clicked(self):
+        for i in range(self.available_connections.count()-1, -1, -1):
+            item = self.available_connections.takeItem(i)
+            self.allowed_connections.insertItem(0, item)
 
-    def _on_removeConnection_clicked(self):
-        items = self.allowedConnections.selectedItems()
+    def _on_remove_connection_clicked(self):
+        items = self.allowed_connections.selectedItems()
         for i in items:
-            self.allowedConnections.takeItem(self.allowedConnections.indexFromItem(i).row())
-            self.availableConnections.addItem(i)
+            self.allowed_connections.takeItem(self.allowed_connections.indexFromItem(i).row())
+            self.available_connections.addItem(i)
 
-    def _on_removeAllConnections_clicked(self):
-        for i in range(self.allowedConnections.count()-1, -1, -1):
-            item = self.allowedConnections.takeItem(i)
-            self.availableConnections.insertItem(0, item)
+    def _on_remove_all_connections_clicked(self):
+        for i in range(self.allowed_connections.count()-1, -1, -1):
+            item = self.allowed_connections.takeItem(i)
+            self.available_connections.insertItem(0, item)
 
     def _create_basics_tab(self) -> QWidget:
         grid = QGridLayout()
@@ -239,25 +241,25 @@ class SettingsDialog(QDialog):
             )
         self.download_destination.setText(settings.download_destination)
 
-        self.allowAllWifi.setChecked(settings.allow_download_from_wifi)
-        self.allowAllWired.setChecked(settings.allow_download_from_wired)
-        self.allowConfiguredVpn.setChecked(settings.allow_download_from_vpn)
+        self.allow_all_wifi.setChecked(settings.allow_download_from_wifi)
+        self.allow_all_wired.setChecked(settings.allow_download_from_wired)
+        self.allow_configured_vpn.setChecked(settings.allow_download_from_vpn)
 
-        allowedConnections = settings.allowed_connections
+        allowed_connections = settings.allowed_connections
         for con in network_manager_connection.get_all():
             if con.con_type == network_manager_connection.ConnectionType.WIRED:
                 item = QListWidgetItem(QIcon.fromTheme(QIcon.ThemeIcon.NetworkWired), con.name)
             elif con.con_type == network_manager_connection.ConnectionType.WIFI:
                 item = QListWidgetItem(QIcon.fromTheme(QIcon.ThemeIcon.NetworkWireless), con.name)
             elif con.con_type == network_manager_connection.ConnectionType.VPN:
-                item = QListWidgetItem(QIcon.fromTheme(u"network-vpn"), con.name)
+                item = QListWidgetItem(QIcon.fromTheme("network-vpn"), con.name)
             else:
                 item = QListWidgetItem(con.name)
             item.setData(Qt.ItemDataRole.UserRole, con.uuid)
-            if con.uuid in allowedConnections:
-                self.allowedConnections.addItem(item)
+            if con.uuid in allowed_connections:
+                self.allowed_connections.addItem(item)
             else:
-                self.availableConnections.addItem(item)
+                self.available_connections.addItem(item)
 
     def save_settings(self, settings: Settings):
         settings.admin_server_url = self.admin_server_url.text()
@@ -270,13 +272,13 @@ class SettingsDialog(QDialog):
         settings.download_type = self.download_type.currentData()
         settings.download_destination = self.download_destination.text()
 
-        settings.allow_download_from_wifi = self.allowAllWifi.isChecked()
-        settings.allow_download_from_wired = self.allowAllWired.isChecked()
-        settings.allow_download_from_vpn = self.allowConfiguredVpn.isChecked()
+        settings.allow_download_from_wifi = self.allow_all_wifi.isChecked()
+        settings.allow_download_from_wired = self.allow_all_wired.isChecked()
+        settings.allow_download_from_vpn = self.allow_configured_vpn.isChecked()
 
         cons = []
-        for i in range(self.allowedConnections.count()):
-            item = self.allowedConnections.item(i)
+        for i in range(self.allowed_connections.count()):
+            item = self.allowed_connections.item(i)
             uuid = item.data(Qt.ItemDataRole.UserRole)
             cons.append(uuid)
         settings.allowed_connections = cons

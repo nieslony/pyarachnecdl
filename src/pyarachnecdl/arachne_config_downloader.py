@@ -15,7 +15,7 @@ from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 import dbus
 from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QDialog
 from PyQt6.QtGui import QIcon, QDesktopServices
-from PyQt6.QtCore import QUrl, QFile, QDir, QTimer
+from PyQt6.QtCore import QUrl, QFile, QDir
 
 import pyarachnecdl.data
 from .settings_dialog import SettingsDialog
@@ -89,7 +89,7 @@ class ArachneConfigDownloader(QApplication):
                 return True
             if con.con_type == ConnectionType.VPN and \
                con.uuid == self.settings.connection_uuid and \
-               settings.allow_download_from_vpn:
+               self.settings.allow_download_from_vpn:
                 return True
 
         return False
@@ -112,11 +112,9 @@ class ArachneConfigDownloader(QApplication):
 
     def _error(self, msg):
         self.tray_icon.showMessage("Error", msg, QSystemTrayIcon.MessageIcon.Warning)
-        print(f"{time.asctime()}: {msg}")
 
     def _info(self, msg):
         self.tray_icon.showMessage("Info", msg, QSystemTrayIcon.MessageIcon.Information)
-        print(f"{time.asctime()}: {msg}")
 
     def _scheduled_download(self):
         if self._is_nm_connection_allowed():
@@ -236,10 +234,7 @@ class ArachneConfigDownloader(QApplication):
         QDesktopServices.openUrl(QUrl(self.settings.admin_server_url))
 
     def _on_exit(self):
-        try:
-            self.download_thread.cancel()
-        except Exception:
-            pass
+        self.download_thread.cancel()
         self.quit()
 
 def main():
