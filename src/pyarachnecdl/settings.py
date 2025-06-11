@@ -1,6 +1,7 @@
 from enum import StrEnum
 import socket
 import ast
+import time
 
 from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import QApplication
@@ -182,6 +183,10 @@ class Settings(QSettings):
     @allowed_connections.setter
     def allowed_connections(self, cons: list):
         self.setValue("allowedConnections", str(cons))
+
+    def touch_last_successful_download(self):
+        now = int(time.time())
+        self.last_successful_download = now
 
     def __str__(self) -> str:
         l = []
