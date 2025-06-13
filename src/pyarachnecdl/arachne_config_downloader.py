@@ -5,6 +5,7 @@ Arachne Config Downloader
 import importlib.resources
 import sys
 import os
+import datetime
 import time
 import json
 import ipaddress
@@ -65,18 +66,23 @@ class ArachneConfigDownloader(QApplication):
             self.download_thread = threading.Timer(delay, self._scheduled_download)
             self.download_thread.start()
 
-    def _status_icon(self):
+    def _update_status(self):
         last_successful_download = self.settings.last_successful_download
-        if last_successful_download == -1:
-            return self.icon_blue
-
+        dt = datetime.datetime.fromtimestamp(last_successful_download)
         now = time.time()
-        if now - last_successful_download < 7 * 24 * 60 * 60:
-            return self.icon_green
-        if now - last_successful_download < 31 * 24 * 60 * 60:
-            return self.icon_yellow
 
-        return self.icon_red
+        if last_successful_download == -1:
+            self.tray_icon.setIcon(self.icon_blue)
+            self.tray_icon.setToolTip(f"{self.applicationName()}\nConfiguration has nevew been downloaded")
+        elif now - last_successful_download < 7 * 24 * 60 * 60:
+            self.tray_icon.setIcon(self.icon_green)
+            self.tray_icon.setToolTip(f"{self.applicationName()}\nLast configuration update: {dt.ctime()}")
+        elif now - last_successful_download < 31 * 24 * 60 * 60:
+            self.tray_icon.setIcon(self.icon_yellow)
+            self.tray_icon.setToolTip(f"{self.applicationName()}\nError: Last configuration update more than 7 days ago: {dt.ctime()}")
+        else:
+            self.tray_icon.setIcon(self.icon_red)
+            self.tray_icon.setToolTip(f"{self.applicationName()}\nError: Last configuration update more than 31 days ago: {dt.ctime()}")
 
     def _is_nm_connection_allowed(self) -> bool:
         allowed_cons = self.settings.allowed_connections
@@ -104,8 +110,8 @@ class ArachneConfigDownloader(QApplication):
         self.menu.addAction("About Qt..", self.aboutQt)
         self.menu.addAction("Exit", self._on_exit)
 
-        self.tray_icon = QSystemTrayIcon(self._status_icon(), None)
-        self.tray_icon.setToolTip("Arachne Config Downloader")
+        self.tray_icon = QSystemTrayIcon(None)
+        self._update_status()
         self.tray_icon.setContextMenu(self.menu)
         self.tray_icon.setVisible(True)
         self.tray_icon.show()
@@ -118,7 +124,7 @@ class ArachneConfigDownloader(QApplication):
 
     def _scheduled_download(self):
         if self._is_nm_connection_allowed():
-            self._on_download_now()
+            self._on_download_now(False)
         if self.settings.auto_download:
             if self.settings.download_interval_unit == TimeUnit.SEC:
                 delay = self.settings.download_interval
@@ -128,20 +134,27 @@ class ArachneConfigDownloader(QApplication):
                 delay = self.settings.download_interval * 60 * 60
             else:
                 return
+
             self.download_thread = threading.Timer(delay, self._scheduled_download)
             self.download_thread.start()
 
-    def _save_file(self, content):
+    def _save_file(self, content, show_info):
         config_dir = self.settings.download_destination.replace("~/", QDir.homePath() + "/")
         if not os.path.exists(config_dir):
             os.mkdir(config_dir)
         fn = config_dir + "/OpenVPN_arachne.conf"
         f = QFile(fn)
-        f.open(QFile.OpenModeFlag.WriteOnly)
-        f.write(content)
-        f.close()
+        try:
+            with open(QFile.OpenModeFlag.WriteOnly) as f:
+                f.write(content)
+                f.close()
+                if show_info:
+                    self._info(f"Configuration saved as {fn}")
+        except IOError as ex:
+            if show_info:
+                self._error(f"Cannot save {fn}: {str(ex)}")
 
-    def _update_networkmaneger_connection(self, content):
+    def _update_networkmaneger_connection(self, content, show_info):
         con_data = json.loads(content)
         bus = dbus.SystemBus()
         settings = bus.get_object(
@@ -183,7 +196,8 @@ class ArachneConfigDownloader(QApplication):
                 con_settings,
                 dbus_interface="org.freedesktop.NetworkManager.Settings.Connection"
                 )
-            self._info(f"Updaded connection '{con_data['name']}'")
+            if show_info:
+                self._info(f"Updaded connection '{con_data['name']}'")
         except dbus.exceptions.DBusException:
             new_con_obj_path = settings.AddConnection(
                 con_settings,
@@ -195,9 +209,10 @@ class ArachneConfigDownloader(QApplication):
                 )
             uuid = new_settings["connection"]["uuid"]
             self.settings.connection_uuid = uuid
-            self._info(f"Added new connection '{con_data['name']}' with uuid ''{uuid}'")
+            if show_info:
+                self._info(f"Added new connection '{con_data['name']}' with uuid ''{uuid}'")
 
-    def _on_download_now(self):
+    def _on_download_now(self, show_info=True):
         url = self.settings.admin_server_url + USER_CONFIG_API_PATH
         if self.settings.download_type == DownloadType.NETWORK_MANAGER:
             url += "?format=json"
@@ -208,20 +223,19 @@ class ArachneConfigDownloader(QApplication):
                 timeout=6,
                 verify=(not self.settings.ignore_ssl_errors)
                 )
-            #r.raise_for_status()
-
+            r.raise_for_status()
             if self.settings.download_type == DownloadType.NETWORK_MANAGER:
-                self._update_networkmaneger_connection(r.content)
+                self._update_networkmaneger_connection(r.content, show_info)
             elif self.settings.download_type == DownloadType.OVPN:
-                self._save_file(r.content)
+                self._save_file(r.content, show_info)
             self.settings.touch_last_successful_download()
-            self.tray_icon.setIcon(self._status_icon())
         except json.decoder.JSONDecodeError as ex:
-            self._error(f"Error parsing json: {str(ex)}")
-        except requests.exceptions.HTTPError as ex:
-            self._error(f"Cannot download configuration from {url}: {ex.strerror()}")
-        except requests.exceptions.ConnectTimeout as ex:
-            self._error(f"Cannot connect to {url}: {str(ex)}")
+            if show_info:
+                self._error(f"Error parsing json: {str(ex)}")
+        except requests.exceptions.RequestException as ex:
+            if show_info:
+                self._error(f"Cannot download configuration from {url}: {str(ex)}")
+        self._update_status()
 
     def _on_settings(self):
         dlg = SettingsDialog(QIcon(self.icon_pixmap))
