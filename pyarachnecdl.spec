@@ -17,6 +17,8 @@ BuildRequires:  desktop-file-utils
 
 Recommends:     NetworkManager-openvpn
 
+Obsoletes:      ArachneConfigDownloader
+
 %{?python_enable_dependency_generator}
 
 %description
