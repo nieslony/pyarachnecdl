@@ -22,6 +22,7 @@ setup(
     install_requires=[
           "pyqt6",
           "requests",
-          "requests-kerberos"
+          "requests-kerberos",
+          "dbus"
     ],
 )
