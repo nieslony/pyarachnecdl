@@ -2,7 +2,7 @@
 %define autostart_dir   %{_sysconfdir}/xdg/autostart
 
 Name:           pyarachnecdl
-Version:        1.0
+Version:        1.0.1
 Release:        1%{?dist}
 Summary:        Arachne Configuration Downloader
 License:        GPLv3
@@ -60,6 +60,10 @@ desktop-file-edit --set-name=%{name} \
 %{autostart_dir}/%{name}.desktop
 
 %changelog
+* Fri Jun 13 2025 Claas Nieslony <github@nieslony.at> 1.0.1-1
+- Fix: syntax (github@nieslony.at)
+- Fix: dependency (github@nieslony.at)
+
 * Fri Jun 13 2025 Claas Nieslony <github@nieslony.at> 1.0-1
 - new package built with tito
 
