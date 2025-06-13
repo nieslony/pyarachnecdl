@@ -23,6 +23,6 @@ setup(
           "pyqt6",
           "requests",
           "requests-kerberos",
-          "dbus"
+          "dbus-python"
     ],
 )
