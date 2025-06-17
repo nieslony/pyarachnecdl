@@ -14,9 +14,22 @@ import requests
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 
 import dbus
-from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QDialog
-from PyQt6.QtGui import QIcon, QDesktopServices
-from PyQt6.QtCore import QUrl, QFile, QDir
+from PyQt6.QtWidgets import (
+    QApplication,
+    QSystemTrayIcon,
+    QMenu,
+    QDialog
+    )
+from PyQt6.QtGui import (
+    QIcon,
+    QDesktopServices
+    )
+from PyQt6.QtCore import (
+    QDir,
+    QUrl,
+    QFile,
+    QDir
+    )
 
 import pyarachnecdl.data
 from .settings_dialog import SettingsDialog
@@ -154,8 +167,7 @@ class ArachneConfigDownloader(QApplication):
             if show_info:
                 self._error(f"Cannot save {fn}: {str(ex)}")
 
-    def _update_networkmaneger_connection(self, content, show_info):
-        con_data = json.loads(content)
+    def _update_networkmaneger_connection(self, con_data, show_info):
         bus = dbus.SystemBus()
         settings = bus.get_object(
             "org.freedesktop.NetworkManager",
@@ -171,9 +183,9 @@ class ArachneConfigDownloader(QApplication):
             "vpn": {
                 "service-type": "org.freedesktop.NetworkManager.openvpn",
                 "data": {
-                    "ca": "ca.crt",
-                    "cert": "cert.crt",
-                    "key": "key.key"
+                    "ca": self._ca_file_name,
+                    "cert": self._cert_file_name,
+                    "key": self._key_file_name
                     } | { k: str(v) for k,v in con_data["data"].items() }
                 },
             "ipv4": {
@@ -212,6 +224,23 @@ class ArachneConfigDownloader(QApplication):
             if show_info:
                 self._info(f"Added new connection '{con_data['name']}' with uuid ''{uuid}'")
 
+    def _save_certs(self, json):
+        home = QDir.home()
+        home.mkdir(".cert")
+        self._ca_file_name = f"{home.absolutePath()}/.cert/arachne-ca.crt"
+        self._cert_file_name = f"{home.absolutePath()}/.cert/arachne-cert.crt"
+        self._key_file_name = f"{home.absolutePath()}/.cert/arachne-cert.key"
+
+        with open(self._ca_file_name,  "w") as f:
+            f.write(json["certificates"]["caCert"])
+            f.close()
+        with open(self._cert_file_name, "w") as f:
+            f.write(json["certificates"]["userCert"])
+            f.close()
+        with open(self._key_file_name, "w") as f:
+            f.write(json["certificates"]["privateKey"])
+            f.close()
+
     def _on_download_now(self, show_info=True):
         url = self.settings.admin_server_url + USER_CONFIG_API_PATH
         if self.settings.download_type == DownloadType.NETWORK_MANAGER:
@@ -225,7 +254,9 @@ class ArachneConfigDownloader(QApplication):
                 )
             r.raise_for_status()
             if self.settings.download_type == DownloadType.NETWORK_MANAGER:
-                self._update_networkmaneger_connection(r.content, show_info)
+                json_data = r.json()
+                self._save_certs(json_data)
+                self._update_networkmaneger_connection(json_data, show_info)
             elif self.settings.download_type == DownloadType.OVPN:
                 self._save_file(r.content, show_info)
             self.settings.touch_last_successful_download()
