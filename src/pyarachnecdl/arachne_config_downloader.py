@@ -8,7 +8,8 @@ import os
 import datetime
 import time
 import json
-import ipaddress
+import netaddr
+import socket
 import threading
 import requests
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
@@ -193,7 +194,7 @@ class ArachneConfigDownloader(QApplication):
                 "method": "auto",
                 "dns-search": con_data["ipv4"]["dns-search"],
                 "dns": [
-                    dbus.types.UInt32(ipaddress.ip_address(ip)) for ip in con_data["ipv4"]["dns"]
+                    dbus.types.UInt32(socket.htonl(netaddr.IPAddress(ip).value)) for ip in con_data["ipv4"]["dns"]
                     ]
                 }
             }
