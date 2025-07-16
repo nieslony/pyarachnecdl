@@ -228,9 +228,18 @@ class ArachneConfigDownloader(QApplication):
     def _save_certs(self, json):
         home = QDir.home()
         home.mkdir(".cert")
-        self._ca_file_name = f"{home.absolutePath()}/.cert/arachne-ca.crt"
-        self._cert_file_name = f"{home.absolutePath()}/.cert/arachne-cert.crt"
-        self._key_file_name = f"{home.absolutePath()}/.cert/arachne-cert.key"
+        if "caCertFilename" in json["certificates"]:
+            self._ca_file_name = f"{home.absolutePath()}/.cert/{json['certificates']['caCertFilename']}"
+        else:
+            self._ca_file_name = f"{home.absolutePath()}/.cert/arachne-ca.crt"
+        if "userCertFilename" in json["certificates"]:
+            self._cert_file_name = f"{home.absolutePath()}/.cert/{json['certificates']['userCertFilename']}"
+        else:
+            self._cert_file_name = f"{home.absolutePath()}/.cert/arachne-cert.crt"
+        if "privateKeyFilename" in json["certificates"]:
+            self._key_file_name = f"{home.absolutePath()}/.cert/{json['certificates']['privateKeyFilename']}"
+        else:
+            self._key_file_name = f"{home.absolutePath()}/.cert/arachne-cert.key"
 
         with open(self._ca_file_name,  "w") as f:
             f.write(json["certificates"]["caCert"])
