@@ -8,9 +8,10 @@ import os
 import datetime
 import time
 import json
-import netaddr
 import socket
 import threading
+
+import netaddr
 import requests
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 
@@ -28,8 +29,7 @@ from PyQt6.QtGui import (
 from PyQt6.QtCore import (
     QDir,
     QUrl,
-    QFile,
-    QDir
+    QFile
     )
 
 import pyarachnecdl.data
@@ -48,6 +48,10 @@ class ArachneConfigDownloader(QApplication):
         self.setApplicationName("Arachne Config Downloader")
         self.setDesktopFileName("arachne-cdl")
         self.setQuitOnLastWindowClosed(False)
+
+        self._ca_file_name = ""
+        self._cert_file_name = ""
+        self._key_file_name = ""
 
         self.settings = Settings()
         self.settings.sync()
@@ -87,16 +91,24 @@ class ArachneConfigDownloader(QApplication):
 
         if last_successful_download == -1:
             self.tray_icon.setIcon(self.icon_blue)
-            self.tray_icon.setToolTip(f"{self.applicationName()}\nConfiguration has nevew been downloaded")
+            self.tray_icon.setToolTip(
+                f"{self.applicationName()}\nConfiguration has nevew been downloaded"
+                )
         elif now - last_successful_download < 7 * 24 * 60 * 60:
             self.tray_icon.setIcon(self.icon_green)
-            self.tray_icon.setToolTip(f"{self.applicationName()}\nLast configuration update: {dt.ctime()}")
+            self.tray_icon.setToolTip(
+                f"{self.applicationName()}\nLast configuration update: {dt.ctime()}"
+                )
         elif now - last_successful_download < 31 * 24 * 60 * 60:
             self.tray_icon.setIcon(self.icon_yellow)
-            self.tray_icon.setToolTip(f"{self.applicationName()}\nError: Last configuration update more than 7 days ago: {dt.ctime()}")
+            self.tray_icon.setToolTip(
+                f"{self.applicationName()}\nError: Last configuration update more than 7 days ago: {dt.ctime()}"
+                )
         else:
             self.tray_icon.setIcon(self.icon_red)
-            self.tray_icon.setToolTip(f"{self.applicationName()}\nError: Last configuration update more than 31 days ago: {dt.ctime()}")
+            self.tray_icon.setToolTip(
+                f"{self.applicationName()}\nError: Last configuration update more than 31 days ago: {dt.ctime()}"
+                )
 
     def _is_nm_connection_allowed(self) -> bool:
         allowed_cons = self.settings.allowed_connections
@@ -159,7 +171,7 @@ class ArachneConfigDownloader(QApplication):
         fn = config_dir + "/OpenVPN_arachne.conf"
         f = QFile(fn)
         try:
-            with open(QFile.OpenModeFlag.WriteOnly) as f:
+            with open(QFile.OpenModeFlag.WriteOnly, encoding="utf-8") as f:
                 f.write(content)
                 f.close()
                 if show_info:
@@ -194,7 +206,10 @@ class ArachneConfigDownloader(QApplication):
                 "method": "auto",
                 "dns-search": con_data["ipv4"]["dns-search"],
                 "dns": [
-                    dbus.types.UInt32(socket.htonl(netaddr.IPAddress(ip).value)) for ip in con_data["ipv4"]["dns"]
+                    dbus.types.UInt32(
+                        socket.htonl(netaddr.IPAddress(ip).value)
+                    )
+                    for ip in con_data["ipv4"]["dns"]
                     ]
                 }
             }
@@ -225,30 +240,30 @@ class ArachneConfigDownloader(QApplication):
             if show_info:
                 self._info(f"Added new connection '{con_data['name']}' with uuid ''{uuid}'")
 
-    def _save_certs(self, json):
+    def _save_certs(self, json_data):
         home = QDir.home()
         home.mkdir(".cert")
-        if "caCertFilename" in json["certificates"]:
-            self._ca_file_name = f"{home.absolutePath()}/.cert/{json['certificates']['caCertFilename']}"
+        if "caCertFilename" in json_data["certificates"]:
+            self._ca_file_name = f"{home.absolutePath()}/.cert/{json_data['certificates']['caCertFilename']}"
         else:
             self._ca_file_name = f"{home.absolutePath()}/.cert/arachne-ca.crt"
-        if "userCertFilename" in json["certificates"]:
-            self._cert_file_name = f"{home.absolutePath()}/.cert/{json['certificates']['userCertFilename']}"
+        if "userCertFilename" in json_data["certificates"]:
+            self._cert_file_name = f"{home.absolutePath()}/.cert/{json_data['certificates']['userCertFilename']}"
         else:
             self._cert_file_name = f"{home.absolutePath()}/.cert/arachne-cert.crt"
-        if "privateKeyFilename" in json["certificates"]:
-            self._key_file_name = f"{home.absolutePath()}/.cert/{json['certificates']['privateKeyFilename']}"
+        if "privateKeyFilename" in json_data["certificates"]:
+            self._key_file_name = f"{home.absolutePath()}/.cert/{json_data['certificates']['privateKeyFilename']}"
         else:
             self._key_file_name = f"{home.absolutePath()}/.cert/arachne-cert.key"
 
-        with open(self._ca_file_name,  "w") as f:
-            f.write(json["certificates"]["caCert"])
+        with open(self._ca_file_name,  "w", encoding="utf-8") as f:
+            f.write(json_data["certificates"]["caCert"])
             f.close()
-        with open(self._cert_file_name, "w") as f:
-            f.write(json["certificates"]["userCert"])
+        with open(self._cert_file_name, "w", encoding="utf-8") as f:
+            f.write(json_data["certificates"]["userCert"])
             f.close()
-        with open(self._key_file_name, "w") as f:
-            f.write(json["certificates"]["privateKey"])
+        with open(self._key_file_name, "w", encoding="utf-8") as f:
+            f.write(json_data["certificates"]["privateKey"])
             f.close()
 
     def _on_download_now(self, show_info=True):
