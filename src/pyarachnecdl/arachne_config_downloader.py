@@ -9,6 +9,7 @@ import datetime
 import time
 import json
 import socket
+import stat
 import threading
 
 import netaddr
@@ -265,6 +266,7 @@ class ArachneConfigDownloader(QApplication):
         with open(self._key_file_name, "w", encoding="utf-8") as f:
             f.write(json_data["certificates"]["privateKey"])
             f.close()
+        os.chmod(self._key_file_name, stat.S_IRUSR | stat.S_IWUSR)
 
     def _on_download_now(self, show_info=True):
         url = self.settings.admin_server_url + USER_CONFIG_API_PATH
