@@ -2,7 +2,7 @@
 %define autostart_dir   %{_sysconfdir}/xdg/autostart
 
 Name:           pyarachnecdl
-Version:        1.5.1
+Version:        1.4.0
 Release:        1%{?dist}
 Summary:        Arachne Configuration Downloader
 License:        GPLv3
@@ -60,6 +60,9 @@ desktop-file-edit --set-name=%{name} \
 %{autostart_dir}/%{name}.desktop
 
 %changelog
+* Wed Aug 13 2025 root@len-pf287tj6.nieslony.internal <github@nieslony.at> 1.4.0-1
+- 
+
 * Wed Aug 13 2025 root@len-pf287tj6.nieslony.internal <github@nieslony.at> 1.5.1-1
 - Add version.py.template (github@nieslony.at)
 - Add about dialog (github@nieslony.at)

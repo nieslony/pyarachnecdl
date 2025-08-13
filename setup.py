@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
     name = "pyarachnecdl",
     description = "Arachne Config Downloader",
-    version = "1.5.1",
+    version = "1.4.0",
     author = "Claas Nieslony",
     license = "GPLv3",
     packages = ["pyarachnecdl"],
