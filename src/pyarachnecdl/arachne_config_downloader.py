@@ -35,6 +35,7 @@ from PyQt6.QtCore import (
 
 import pyarachnecdl.data
 from .settings_dialog import SettingsDialog
+from .about_dialog import AboutDialog
 from .settings import Settings, DownloadType, TimeUnit
 from . import network_manager_connection
 from .network_manager_connection import ConnectionType
@@ -46,7 +47,7 @@ class ArachneConfigDownloader(QApplication):
         super().__init__(sys.argv)
         self.setOrganizationName("Claas Nieslony")
         self.setOrganizationDomain("nieslony.at")
-        self.setApplicationName("Arachne Config Downloader")
+        self.setApplicationDisplayName("Arachne Config Downloader")
         self.setDesktopFileName("arachne-cdl")
         self.setQuitOnLastWindowClosed(False)
 
@@ -134,7 +135,8 @@ class ArachneConfigDownloader(QApplication):
         self.menu.addAction("Settings...", self._on_settings)
         self.menu.addAction("Open Arachne in Webbrowser", self._on_open_arachne_configuration)
         self.menu.addSeparator()
-        self.menu.addAction("About Qt..", self.aboutQt)
+        self.menu.addAction(f"About {self.applicationDisplayName()}...", self._on_about_pyarachnecdl)
+        self.menu.addAction("About Qt...", self.aboutQt)
         self.menu.addAction("Exit", self._on_exit)
 
         self.tray_icon = QSystemTrayIcon(None)
@@ -308,6 +310,10 @@ class ArachneConfigDownloader(QApplication):
     def _on_exit(self):
         self.download_thread.cancel()
         self.quit()
+
+    def _on_about_pyarachnecdl(self):
+        dlg = AboutDialog()
+        dlg.exec()
 
 def main():
     app = ArachneConfigDownloader()
