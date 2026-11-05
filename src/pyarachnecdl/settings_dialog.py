@@ -18,6 +18,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 
+from dbus.exceptions import DBusException
+
 from .settings import Settings, DownloadType, TimeUnit
 from . import network_manager_connection
 
@@ -248,9 +250,15 @@ class SettingsDialog(QDialog):
         allowed_connections = settings.allowed_connections
         for con in network_manager_connection.get_all():
             if con.con_type == network_manager_connection.ConnectionType.WIRED:
-                item = QListWidgetItem(QIcon.fromTheme(QIcon.ThemeIcon.NetworkWired), con.name)
+                item = QListWidgetItem(
+                    QIcon.fromTheme(QIcon.ThemeIcon.NetworkWired),
+                    con.name
+                    )
             elif con.con_type == network_manager_connection.ConnectionType.WIFI:
-                item = QListWidgetItem(QIcon.fromTheme(QIcon.ThemeIcon.NetworkWireless), con.name)
+                item = QListWidgetItem(
+                    QIcon.fromTheme(QIcon.ThemeIcon.NetworkWireless),
+                    con.name
+                    )
             elif con.con_type == network_manager_connection.ConnectionType.VPN:
                 item = QListWidgetItem(QIcon.fromTheme("network-vpn"), con.name)
             else:
