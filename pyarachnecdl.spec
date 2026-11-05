@@ -2,7 +2,7 @@
 %define autostart_dir   %{_sysconfdir}/xdg/autostart
 
 Name:           pyarachnecdl
-Version:        1.0.5
+Version:        1.0.6
 Release:        1%{?dist}
 Summary:        Arachne Configuration Downloader
 License:        GPLv3
@@ -60,6 +60,9 @@ desktop-file-edit --set-name=%{name} \
 %{autostart_dir}/%{name}.desktop
 
 %changelog
+* Thu Nov 05 2026 Claas Nieslony <github@nieslony.at> 1.0.6-1
+- 
+
 * Tue Jul 22 2025 Claas Nieslony <github@nieslony.at> 1.0.4-1
 - Make private key readable by owner only (github@nieslony.at)
 
