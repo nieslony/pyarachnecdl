@@ -207,13 +207,19 @@ class ArachneConfigDownloader(QApplication):
             "ipv4": {
                 "never-default": con_data["ipv4"]["never-default"],
                 "method": "auto",
-                "dns-search": con_data["ipv4"]["dns-search"],
-                "dns": [
-                    dbus.types.UInt32(
-                        socket.htonl(netaddr.IPAddress(ip).value)
-                    )
-                    for ip in con_data["ipv4"]["dns"]
+                "dns-search": (
+                    con_data["ipv4"]["dns-search"]
+                    if "dns-search" in con_data["ipv4"]
+                    else None
+                    ),
+                "dns": (
+                    [
+                        dbus.types.UInt32(socket.htonl(netaddr.IPAddress(ip).value))
+                        for ip in con_data["ipv4"]["dns"]
                     ]
+                    if "dns" in con_data["ipv4"]
+                    else None
+                    ),
                 }
             }
 
@@ -274,11 +280,15 @@ class ArachneConfigDownloader(QApplication):
         url = self.settings.admin_server_url + USER_CONFIG_API_PATH
         if self.settings.download_type == DownloadType.NETWORK_MANAGER:
             url += "?format=json"
+        kerberos_auth = HTTPKerberosAuth(
+            mutual_authentication=OPTIONAL,
+            force_preemptive=True
+            )
         try:
             r = requests.get(
                 url,
-                auth=HTTPKerberosAuth(mutual_authentication=OPTIONAL),
-                timeout=6,
+                auth=kerberos_auth,
+                timeout=30,
                 verify=(not self.settings.ignore_ssl_errors)
                 )
             r.raise_for_status()
@@ -294,7 +304,9 @@ class ArachneConfigDownloader(QApplication):
                 self._error(f"Error parsing json: {str(ex)}")
         except requests.exceptions.RequestException as ex:
             if show_info:
-                self._error(f"Cannot download configuration from {url}: {str(ex)}")
+                msg = f"Cannot download configuration from {url}: {str(ex)}"
+                print(msg)
+                self._error(msg)
         self._update_status()
 
     def _on_settings(self):
