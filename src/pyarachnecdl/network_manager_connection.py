@@ -1,6 +1,9 @@
 from enum import StrEnum, auto
 
 import dbus
+from dbus.exceptions import DBusException
+
+from PyQt6.QtCore import qWarning
 
 class ConnectionType(StrEnum):
     WIRED = "802-3-ethernet"
@@ -30,9 +33,13 @@ def get_all() -> list:
         )
     for obj_path in con_obj_paths:
         con = bus.get_object("org.freedesktop.NetworkManager", obj_path)
-        settings = con.GetSettings(
-            dbus_interface="org.freedesktop.NetworkManager.Settings.Connection"
-            )
+        try:
+            settings = con.GetSettings(
+                dbus_interface="org.freedesktop.NetworkManager.Settings.Connection"
+                )
+        except DBusException as ex:
+            QWarning("Cannot get connection details of " + obj_path + ": " + str(ex))
+            next
         try:
             con_type = ConnectionType(str(settings["connection"]["type"]))
         except ValueError:
